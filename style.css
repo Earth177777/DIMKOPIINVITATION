@@ -1,0 +1,543 @@
+/* --- CSS Variables & Resets --- */
+:root {
+    --primary: #d4af37;
+    /* Gold */
+    --primary-light: #f3e5ab;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Cormorant Garamond', serif;
+    /* Elegant baseline */
+}
+
+h1,
+h2,
+h3,
+button,
+span {
+    font-family: 'Montserrat', sans-serif;
+    /* Modern contrast */
+}
+
+body {
+    background-color: #000;
+    transition: background-color 0.3s ease;
+    /* Smooth transition for dynamic bg */
+    overscroll-behavior-y: none;
+    display: flex;
+    justify-content: center;
+    /* Center horizontally */
+}
+
+body.no-scroll {
+    overflow: hidden;
+}
+
+/* --- Kopitiam Entry Overlay --- */
+.entry-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle, #2e1d11 0%, #0a0502 100%);
+    /* Deep coffee tones */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 1.5s ease, visibility 1.5s ease;
+}
+
+.entry-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.entry-content {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.entry-title {
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+    filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.8));
+    margin-bottom: 0.5rem;
+    /* Reduced to bring XII-R1 closer */
+}
+
+.entry-title1 {
+    color: var(--primary);
+    font-size: 2.2rem;
+    font-weight: 300;
+    letter-spacing: 12px;
+    font-style: italic;
+    text-transform: uppercase;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+    margin-bottom: 1.5rem;
+    /* Space before the subtitle */
+}
+
+.entry-subtitle {
+    color: #e6d3ba;
+    /* Light latte color */
+    font-size: 1.4rem;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: 1px;
+    opacity: 0.9;
+}
+
+.enter-btn {
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 50px;
+    /* Pill shape */
+    transition: all 0.4s ease;
+    margin-top: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.enter-btn:hover {
+    background: var(--primary);
+    color: #2e1d11;
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+}
+
+/* --- Scroll Progress Bar --- */
+.scroll-progress-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: 1000;
+}
+
+.scroll-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--primary), var(--primary-light));
+    border-radius: 0 2px 2px 0;
+    transition: width 0.1s ease;
+}
+
+/* --- Background Video --- */
+.video-container {
+    position: fixed;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    /* Performance: Hardware Acceleration */
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+#bg-video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* On desktops, constrain the video width to look like a phone */
+@media (min-width: 768px) {
+    .video-container {
+        /* Maximum width to look like a phone screen */
+        width: 100%;
+        max-width: 500px;
+        /* Center the fixed container */
+        left: 50%;
+        transform: translateX(-50%) translateZ(0);
+        /* Box shadow to separate from background */
+        box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+    }
+}
+
+/* --- Scroll Spacer --- */
+.scroll-spacer {
+    /* Greatly increased to slow down the scroll speed.
+       1500vh gives more room for the image reveal and end event. */
+    height: 1500vh;
+    width: 100%;
+}
+
+/* --- Procedural Clouds --- */
+.clouds-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -3;
+    /* Behind the video and particles */
+    overflow: hidden;
+    pointer-events: none;
+    /* Ignore clicks */
+}
+
+/* --- Particles --- */
+.particle-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -2;
+    /* Behind the video but in front of clouds */
+    pointer-events: none;
+}
+
+.cloud {
+    position: absolute;
+    /* Performance: Replaced expensive filter: blur() with radial-gradient for Opera/Chrome speed */
+    background: radial-gradient(circle at center, rgba(230, 211, 186, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+    border-radius: 50%;
+
+    animation-name: drift;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+
+    /* Performance: Hardware Acceleration */
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+/* Keyframes for smooth lateral drifting */
+@keyframes drift {
+    0% {
+        transform: translateX(-150%) translateY(0) scale(1);
+    }
+
+    50% {
+        transform: translateX(50vw) translateY(-20px) scale(1.1);
+        /* Slight bobbing and growth */
+    }
+
+    100% {
+        transform: translateX(110vw) translateY(0) scale(1);
+    }
+}
+
+/* --- Scroll Indicator --- */
+.scroll-indicator {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    opacity: 0.9;
+    animation: bounce 2s infinite ease-in-out;
+    z-index: 100;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.scroll-indicator.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.scroll-indicator span {
+    font-size: 0.8rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--primary-light);
+    font-family: 'Montserrat', sans-serif;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* --- Secondary Scroll Indicator (During Reveal) --- */
+.scroll-indicator-2 {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    opacity: 0.9;
+    animation: bounce 2s infinite ease-in-out;
+    z-index: 4500;
+    /* Above the image reveal */
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.scroll-indicator-2.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.scroll-indicator-2 span {
+    font-size: 0.75rem;
+    /* Slightly smaller for longer text */
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--primary);
+    font-family: 'Montserrat', sans-serif;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    text-align: center;
+    max-width: 250px;
+}
+
+.mouse {
+    width: 26px;
+    height: 40px;
+    border: 2px solid var(--primary-light);
+    border-radius: 13px;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.wheel {
+    width: 4px;
+    height: 10px;
+    background: var(--primary);
+    border-radius: 2px;
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: mouse-scroll 1.5s infinite;
+}
+
+@keyframes bounce {
+
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+        transform: translateY(0) translateX(-50%);
+    }
+
+    40% {
+        transform: translateY(-10px) translateX(-50%);
+    }
+
+    60% {
+        transform: translateY(-5px) translateX(-50%);
+    }
+}
+
+@keyframes mouse-scroll {
+    0% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(15px);
+    }
+}
+
+/* --- End Event Section --- */
+.end-event-section {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(10, 5, 2, 0.9);
+    /* Very dark roasted transparency */
+    backdrop-filter: blur(15px);
+    /* Premium glassmorphism */
+    -webkit-backdrop-filter: blur(15px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5000;
+    /* Above everything except entry overlay */
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 1.5s ease, visibility 1.5s ease;
+}
+
+.end-event-section.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.end-event-content {
+    background: radial-gradient(circle at center, rgba(46, 29, 17, 0.9) 0%, rgba(20, 10, 5, 0.95) 100%);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    padding: 4rem;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(212, 175, 55, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    transform: translateY(0);
+    transition: transform 1.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.end-event-section.hidden .end-event-content {
+    transform: translateY(50px);
+}
+
+.bottom-logo {
+    width: 100%;
+    max-width: 200px;
+    height: auto;
+    margin: 0 auto;
+    filter: drop-shadow(0 4px 15px rgba(0, 0, 0, 0.5));
+}
+
+.end-title {
+    color: var(--primary);
+    font-size: 2.5rem;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+    padding-bottom: 1rem;
+}
+
+.event-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    color: #e6d3ba;
+    font-size: 1.2rem;
+    text-align: left;
+    margin: 0 auto;
+}
+
+.event-details p {
+    font-family: 'Montserrat', sans-serif;
+}
+
+.event-details strong {
+    color: var(--primary-light);
+    display: inline-block;
+    width: 100px;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+
+.end-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+    width: 100%;
+    align-items: center;
+}
+
+.book-btn {
+    background: var(--primary);
+    color: #1a0a00;
+    border: none;
+    padding: 1.2rem 2.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+    width: 100%;
+    max-width: 300px;
+}
+
+.book-btn:hover {
+    background: var(--primary-light);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5);
+}
+
+.secondary-btn {
+    background: transparent;
+    color: #e6d3ba;
+    border: 1px solid rgba(230, 211, 186, 0.3);
+    padding: 0.8rem 2rem;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    width: 100%;
+    max-width: 300px;
+}
+
+.secondary-btn:hover {
+    background: rgba(230, 211, 186, 0.1);
+    color: #fff;
+    border-color: rgba(230, 211, 186, 0.6);
+}
+
+.fine-print {
+    color: rgba(230, 211, 186, 0.5);
+    font-size: 0.85rem;
+    font-style: italic;
+    margin-top: 0.5rem;
+}
+
+.fine-print1 {
+    color: rgba(230, 211, 186, 0.5);
+    font-size: 1rem;
+    font-style: italic;
+}
+
+/* --- Mobile Responsiveness Adjustments --- */
+@media (max-width: 600px) {
+    .entry-title {
+        font-size: 2.5rem;
+        /* Scale down massive fonts for mobile */
+        letter-spacing: 4px;
+    }
+
+    .entry-subtitle {
+        font-size: 1.1rem;
+    }
+
+    .end-event-content {
+        padding: 2.5rem 1.5rem;
+        width: 95%;
+    }
+
+    .end-title {
+        font-size: 1.8rem;
+        letter-spacing: 2px;
+    }
+
+    .event-details {
+        font-size: 1rem;
+    }
+
+    .book-btn {
+        padding: 1rem 1.5rem;
+        font-size: 0.95rem;
+    }
+}

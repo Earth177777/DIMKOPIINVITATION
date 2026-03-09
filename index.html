@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R1 Class KOPI Invitation</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@300;400;600&display=swap"
+        rel="stylesheet">
+
+    <link rel="canonical" href="https://R1.MAITREYAWIRA.COM" />
+    <link rel="icon" type="image/svg+xml" href="logo.svg" />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="no-scroll">
+
+    <!-- Kopitiam Themed Entry Overlay -->
+    <div id="entry-overlay" class="entry-overlay">
+        <div class="entry-content">
+            <img src="logo.svg" alt="DIM KOPI" class="entry-title">
+            <h1 class="entry-title1">XII-R1</h1>
+            <p class="entry-subtitle">Grab a cup of kopi and welcome to R1 art Exhibition</p>
+            <button id="enter-btn" class="enter-btn">Buka Undangan</button>
+        </div>
+    </div>
+
+    <!-- Background Audio -->
+    <audio id="bg-audio" loop>
+        <source src="filelagu.MP3" type="audio/mpeg">
+    </audio>
+
+    <!-- Background Clouds -->
+    <div id="clouds-container" class="clouds-container"></div>
+
+    <!-- Background Image Sequence Canvas (Replaces laggy video element) -->
+    <div class="video-container">
+        <canvas id="bg-canvas"></canvas>
+    </div>
+
+    <!-- Hidden Canvas for extracting average color -->
+    <canvas id="color-canvas" style="display: none;"></canvas>
+
+    <!-- Scroll Progress -->
+    <div class="scroll-progress-container">
+        <div class="scroll-progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- Spacer to enable scrolling -->
+    <div class="scroll-spacer"></div>
+
+    <!-- Scroll Prompt Indicator -->
+    <div id="scroll-prompt" class="scroll-indicator hidden">
+        <span>Scroll to Explore</span>
+        <div class="mouse">
+            <div class="wheel"></div>
+        </div>
+    </div>
+
+    <!-- Secondary Scroll Prompt (For Image Reveal) -->
+    <div id="scroll-prompt-2" class="scroll-indicator-2 hidden">
+        <span>Scroll to Book Photobooth, Pre-Order Your Food & More Info</span>
+        <div class="mouse">
+            <div class="wheel"></div>
+        </div>
+    </div>
+
+    <!-- End Event Information & Booking Section -->
+    <div id="end-event-section" class="end-event-section hidden">
+        <div class="end-event-content">
+            <img src="logo.svg" alt="DIM KOPI" class="bottom-logo">
+            <h2 class="end-title">Join The Experience</h2>
+            <div class="event-details">
+                <p><strong>Time:</strong> 16 Maret 2026, 09.00-14.00</p>
+                <p><strong>Theme:</strong> RETRO KOPITIAM</p>
+                <p><strong>Location:</strong> XII-R1 (R.301), Gedung B/SMA </p>
+            </div>
+
+            <div class="end-actions">
+                <button id="book-photobooth-btn" class="book-btn">Book Photobooth & Pre-Order Your Food</button>
+                <button id="back-to-top-btn" class="secondary-btn">Back to Top</button>
+            </div>
+            <p class="fine-print1">A Lot Of Option For Photobooth Frames, From 3X1 Grid To 16:9 Printout</p>
+            <p class="fine-print">Days In Memory Koffee Pieces . Secure Your Memories Now!</p>
+        </div>
+    </div>
+
+    <!-- Custom Script -->
+    <script src="script.js"></script>
+</body>
+
+</html>
