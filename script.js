@@ -30,13 +30,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Config: We generated exactly 350 frames in the /frames directory
     const TOTAL_FRAMES = 350;
-    const TOTAL_LOADS = TOTAL_FRAMES + 1; // 350 frames + 1 special end script image
+    const INITIAL_LOAD_FRAMES = 30; // Load first 30 frames to show interactive button ASAP
     const images = [];
 
     let specialImage = new Image();
-    specialImage.src = "IMG_9639.webp";
+    // Do not set src yet to defer loading
 
     let imagesLoaded = 0;
+    let initialLoadComplete = false;
 
     // We will extract average color from the center of the frame occasionally
     let lastColorExtractTime = 0;
@@ -47,11 +48,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // Draw a tiny version of the image to the hidden color canvas
             const colorCanvas = document.getElementById('color-canvas');
             const colorCtx = colorCanvas.getContext('2d', { willReadFrequently: true });
-            colorCanvas.width = 64;
-            colorCanvas.height = 64;
-            colorCtx.drawImage(img, 0, 0, 64, 64);
+            colorCanvas.width = 16; // Even smaller for better performance
+            colorCanvas.height = 16;
+            colorCtx.drawImage(img, 0, 0, 16, 16);
 
-            const frame = colorCtx.getImageData(0, 0, 64, 64);
+            const frame = colorCtx.getImageData(0, 0, 16, 16);
             const data = frame.data;
             let r = 0, g = 0, b = 0, count = 0;
 
@@ -75,6 +76,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loadingScreen.innerText = "Loading High-Quality Experience... 0%";
     if (bgCanvas) document.body.appendChild(loadingScreen);
 
+    // Cache sizing parameters for better performance
+    let drawParams = { scale: 1, x: 0, y: 0 };
+
     // Helper function to mimic object-fit: contain on a canvas
     function drawImageContain(ctx, img, canvasWidth, canvasHeight) {
         // Find the scale to fit the image inside the canvas without cropping
@@ -87,6 +91,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Clear previous frame and draw the correctly proportioned image
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
         ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+
+        // Update cached params for scroll math if needed
+        drawParams = { scale, x, y };
     }
 
     // Resize listener to keep canvas sharp and responsive
@@ -97,28 +104,37 @@ document.addEventListener('DOMContentLoaded', () => {
         bgCanvas.height = container.clientHeight;
 
         // Fire a scroll event to redraw properly
-        if (imagesLoaded === TOTAL_LOADS && ctx) {
-            window.dispatchEvent(new Event('scroll'));
+        if (imagesLoaded >= INITIAL_LOAD_FRAMES && ctx && images[0]) {
+            drawImageContain(ctx, images[0], bgCanvas.width, bgCanvas.height);
         }
     }
     window.addEventListener('resize', resizeBgCanvas);
 
     function checkAllLoaded() {
-        if (loadingScreen) loadingScreen.innerText = `Loading High-Quality Experience... ${Math.floor((imagesLoaded / TOTAL_LOADS) * 100)}%`;
-        if (imagesLoaded === TOTAL_LOADS) {
-            if (loadingScreen) loadingScreen.remove();
-            resizeBgCanvas();
-            drawImageContain(ctx, images[0], bgCanvas.width, bgCanvas.height);
-            setAvgBackgroundColor(images[0]);
+        if (!initialLoadComplete) {
+            const progress = Math.min((imagesLoaded / INITIAL_LOAD_FRAMES) * 100, 100);
+            if (loadingScreen) loadingScreen.innerText = `Loading High-Quality Experience... ${Math.floor(progress)}%`;
+
+            if (imagesLoaded >= INITIAL_LOAD_FRAMES) {
+                initialLoadComplete = true;
+                if (loadingScreen) loadingScreen.remove();
+                resizeBgCanvas();
+                if (images[0]) {
+                    drawImageContain(ctx, images[0], bgCanvas.width, bgCanvas.height);
+                    setAvgBackgroundColor(images[0]);
+                }
+                // Background load remaining frames and special image
+                loadRemainingFrames();
+            }
         }
     }
 
-    specialImage.onload = () => {
-        imagesLoaded++;
-        checkAllLoaded();
-    };
+    // Load initial batch
+    for (let i = 1; i <= INITIAL_LOAD_FRAMES; i++) {
+        preloadFrame(i);
+    }
 
-    for (let i = 1; i <= TOTAL_FRAMES; i++) {
+    function preloadFrame(i) {
         const img = new Image();
         const paddedIndex = i.toString().padStart(4, '0');
         img.src = `frames/frame_${paddedIndex}.jpg`;
@@ -126,8 +142,21 @@ document.addEventListener('DOMContentLoaded', () => {
             imagesLoaded++;
             checkAllLoaded();
         };
-        images.push(img);
+        images[i - 1] = img; // Keep order
     }
+
+    function loadRemainingFrames() {
+        // Load remaining frames slowly in background
+        for (let i = INITIAL_LOAD_FRAMES + 1; i <= TOTAL_FRAMES; i++) {
+            preloadFrame(i);
+        }
+        // Load special image last
+        specialImage.onload = () => {
+            // Ready for reveal phase
+        };
+        specialImage.src = "IMG_9639.webp";
+    }
+
 
     // Performance: Extreme Debounce (Ticking Lock)
     let ticking = false;
@@ -143,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 progressBar.style.width = (scrollPercentage * 100) + '%';
 
                 // --- ZERO LAG IMAGE DRAWING ---
-                if (images.length === TOTAL_FRAMES && imagesLoaded === TOTAL_LOADS && ctx) {
+                if (initialLoadComplete && ctx) {
                     // Map the first 80% of scroll to the 350 frames
                     const frameScrollPct = Math.min(scrollPercentage / 0.80, 1.0);
                     const frameIndex = Math.max(0, Math.min(
@@ -151,12 +180,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         Math.floor(frameScrollPct * TOTAL_FRAMES)
                     ));
 
-                    // Instantly draw the pre-rendered image using proportional contain logic
-                    ctx.globalAlpha = 1.0;
-                    drawImageContain(ctx, images[frameIndex], bgCanvas.width, bgCanvas.height);
+                    // Instantly draw the pre-rendered image if it exists (background load might still be happening)
+                    if (images[frameIndex] && images[frameIndex].complete) {
+                        ctx.globalAlpha = 1.0;
+                        drawImageContain(ctx, images[frameIndex], bgCanvas.width, bgCanvas.height);
+
+                        // Update background color (Throttled to run at most ~5 times a second - 200ms)
+                        const now = Date.now();
+                        if (now - lastColorExtractTime > 200) {
+                            setAvgBackgroundColor(images[frameIndex]);
+                            lastColorExtractTime = now;
+                        }
+                    }
 
                     // Draw the special image with fade in/out after the frames finish
-                    if (scrollPercentage > 0.80) {
+                    if (scrollPercentage > 0.80 && specialImage.complete) {
                         let specialAlpha = 0;
                         if (scrollPercentage <= 0.84) {
                             specialAlpha = (scrollPercentage - 0.80) / 0.04;
@@ -170,50 +208,38 @@ document.addEventListener('DOMContentLoaded', () => {
                             ctx.globalAlpha = 1.0; // Reset
                         }
                     }
-
-                    // Update background color (Throttled to run at most ~10 times a second)
-                    const now = Date.now();
-                    if (now - lastColorExtractTime > 100) {
-                        setAvgBackgroundColor(images[frameIndex]);
-                        lastColorExtractTime = now;
-                    }
                 }
+
+                // Show/Hide Elements based on scroll percentage
 
                 // Fade out primary scroll prompt once user starts scrolling
                 if (scrollPercentage > 0.01 || !entryOverlay.classList.contains('hidden')) {
-                    scrollPrompt.classList.add('hidden');
+                    if (!scrollPrompt.classList.contains('hidden')) scrollPrompt.classList.add('hidden');
                 } else {
-                    scrollPrompt.classList.remove('hidden');
+                    if (scrollPrompt.classList.contains('hidden')) scrollPrompt.classList.remove('hidden');
                 }
 
                 // Show secondary scroll prompt during the image reveal, but before the end section
                 if (scrollPercentage > 0.84 && scrollPercentage < 0.98) {
-                    if (scrollPrompt2) scrollPrompt2.classList.remove('hidden');
+                    if (scrollPrompt2 && scrollPrompt2.classList.contains('hidden')) scrollPrompt2.classList.remove('hidden');
                 } else {
-                    if (scrollPrompt2) scrollPrompt2.classList.add('hidden');
+                    if (scrollPrompt2 && !scrollPrompt2.classList.contains('hidden')) scrollPrompt2.classList.add('hidden');
                 }
 
                 // Check if user has reached the end of the scroll
                 if (scrollPercentage > 0.98) {
-                    endEventSection.classList.remove('hidden');
+                    if (endEventSection.classList.contains('hidden')) endEventSection.classList.remove('hidden');
                 } else {
-                    endEventSection.classList.add('hidden');
+                    if (!endEventSection.classList.contains('hidden')) endEventSection.classList.add('hidden');
                 }
 
                 // Fade out the canvas as the end event section takes over fully
                 if (scrollPercentage > 0.96) {
-                    // Fade out from 0.96 to 0.99
                     const fadeOutPct = (scrollPercentage - 0.96) / 0.03;
                     bgCanvas.style.opacity = Math.max(0, 1 - fadeOutPct);
                 } else {
                     bgCanvas.style.opacity = 1;
                 }
-
-                // if (scrollPercentage > 0.88) {
-                //     if (imageRevealSection) imageRevealSection.classList.remove('hidden');
-                // } else {
-                //     if (imageRevealSection) imageRevealSection.classList.add('hidden');
-                // }
 
                 ticking = false;
             });
@@ -226,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bookBtn = document.getElementById('book-photobooth-btn');
     if (bookBtn) {
         bookBtn.addEventListener('click', () => {
-            window.location.href = "https://R1PHOTOBOTH.MAITREYAWIRA.COM";
+            window.location.href = "https://R1BOOKING.MAITREYAWIRA.COM";
             // Allow them to unlock and scroll back up if they close out of booking
             document.body.classList.remove('no-scroll');
             endEventSection.classList.add('hidden');
