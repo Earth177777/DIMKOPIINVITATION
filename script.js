@@ -248,16 +248,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, { passive: true }); // PERFORMANCE: Passive listener prevents scroll blocking
 
-    // --- Booking Logic & Navigation ---
-    const bookBtn = document.getElementById('book-photobooth-btn');
-    if (bookBtn) {
-        bookBtn.addEventListener('click', () => {
-            window.location.href = "https://r1booking.webtinous.com";
-            // Allow them to unlock and scroll back up if they close out of booking
-            document.body.classList.remove('no-scroll');
-            endEventSection.classList.add('hidden');
-        });
-    }
 
     const backBtn = document.getElementById('back-to-top-btn');
     if (backBtn) {
