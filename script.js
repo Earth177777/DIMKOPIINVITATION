@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bookBtn = document.getElementById('book-photobooth-btn');
     if (bookBtn) {
         bookBtn.addEventListener('click', () => {
-            window.location.href = "https://R1BOOKING.MAITREYAWIRA.COM";
+            window.location.href = "https://r1booking.webtinous.com";
             // Allow them to unlock and scroll back up if they close out of booking
             document.body.classList.remove('no-scroll');
             endEventSection.classList.add('hidden');
